@@ -43,6 +43,9 @@ async function checkProxyStatus(ip) {
     
     const data = await response.json();
     
+    // Log the entire response to debug
+    console.log('ProxyCheck API response:', data);
+    
     // Check if the IP address is part of the response data
     if (!data[ip]) {
         throw new Error(`Invalid response structure or IP not found in response: ${JSON.stringify(data)}`);
