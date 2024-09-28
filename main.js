@@ -38,6 +38,7 @@ async function checkProxyStatus(ip) {
     
     // Ensure the response is successful and in JSON format
     if (!response.ok) {
+        console.error('Response error:', response);
         throw new Error('Failed to fetch proxy status');
     }
     
@@ -74,6 +75,9 @@ async function handleVPNCheck() {
         }
 
         const result = await checkProxyStatus(ip);
+
+        // Log result to see its structure
+        console.log('Result from ProxyCheck:', result);
 
         // Ensure result contains expected properties
         if (result.proxy === 'yes' || result.vpn === 'yes') {
