@@ -1,12 +1,12 @@
 // Firebase Configuration (Replace with your actual Firebase config)
 const firebaseConfig = {
-  apiKey: "AIzaSyDOQKCzqkdDMlLdIpoUyd9Nnd-Z21vuZho",
-  authDomain: "evanltd1.firebaseapp.com",
-  projectId: "evanltd1",
-  storageBucket: "evanltd1.appspot.com",
-  messagingSenderId: "700870615513",
-  appId: "1:700870615513:web:16d8e42ad88c1b89d7b9c8",
-  measurementId: "G-P5NMF5Z2N3"
+    apiKey: "AIzaSyDOQKCzqkdDMlLdIpoUyd9Nnd-Z21vuZho",
+    authDomain: "evanltd1.firebaseapp.com",
+    projectId: "evanltd1",
+    storageBucket: "evanltd1.appspot.com",
+    messagingSenderId: "700870615513",
+    appId: "1:700870615513:web:16d8e42ad88c1b89d7b9c8",
+    measurementId: "G-P5NMF5Z2N3"
 };
 
 // Initialize Firebase
@@ -70,7 +70,6 @@ async function storeTokenInFirestore(token) {
         console.log('Token stored in Firestore successfully.');
     } catch (error) {
         console.error('Error storing token in Firestore:', error);
-        throw error;  // Throwing error to ensure the flow stops if Firestore storage fails
     }
 }
 
