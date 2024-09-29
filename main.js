@@ -68,6 +68,7 @@ function setCookie(name, value, days) {
     const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Cookie expiration in days
     const expires = "expires=" + date.toUTCString();
+    // Ensure path is set to root to make it available on all pages
     document.cookie = `${name}=${value};${expires};path=/`;
 }
 
@@ -98,7 +99,7 @@ async function handleVerification() {
         // Step 3: If VPN/proxy is detected, redirect back to auth.evan.ltd
         if (result.proxy === 'yes' || result.vpn === 'yes') {
             console.log('VPN detected, redirecting to auth.evan.ltd');
-            window.location.href = 'https://auth.evan.ltd';  // Make sure this redirects correctly
+            window.location.href = 'https://auth.evan.ltd';  // Ensure this redirects correctly
             return;
         }
 
