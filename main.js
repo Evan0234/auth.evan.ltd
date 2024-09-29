@@ -24,7 +24,7 @@ async function getUserIP() {
         return data.ip;
     } catch (error) {
         console.error('Error fetching user IP:', error);
-        throw error;  // Rethrow for higher-level handling
+        throw error;
     }
 }
 
@@ -49,7 +49,7 @@ async function checkProxyStatus(ip) {
         return ipData;
     } catch (error) {
         console.error('Error during proxy check:', error);
-        throw error;  // Rethrow for higher-level handling
+        throw error;
     }
 }
 
@@ -68,6 +68,7 @@ function setCookie(name, value, days) {
     const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Cookie expiration in days
     const expires = "expires=" + date.toUTCString();
+    console.log(`Setting cookie: ${name}=${value}; Expires: ${expires}`);
     document.cookie = `${name}=${value};${expires};path=/;Secure;SameSite=Lax`; // Ensure secure and SameSite attributes
 }
 
@@ -102,6 +103,8 @@ async function handleVerification() {
             return;  // Stop further execution if cookie already exists
         }
 
+        console.log("No existing cookie, proceeding with verification...");
+
         // Step 1: Get the user's IP
         const ip = await getUserIP();
         console.log(`User IP: ${ip}`);
@@ -128,7 +131,7 @@ async function handleVerification() {
         // Step 6: Store the token in Firestore
         await storeTokenInFirestore(token);  // Awaiting this to make sure storage completes
 
-        // Step 7: Redirect to the main site (evan.ltd)
+        // Step 7: Redirect to the main site (evan.ltd) after everything is set
         console.log('Redirecting to evan.ltd');
         window.location.href = 'https://evan.ltd';
 
