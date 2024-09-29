@@ -63,13 +63,12 @@ function generateRandomToken(length = 50) {
     return result;
 }
 
-// Function to set a cookie
+// Function to set a cookie with security options
 function setCookie(name, value, days) {
     const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Cookie expiration in days
     const expires = "expires=" + date.toUTCString();
-    // Ensure path is set to root to make it available on all pages
-    document.cookie = `${name}=${value};${expires};path=/`;
+    document.cookie = `${name}=${value};${expires};path=/;Secure;SameSite=Lax`; // Ensure secure and SameSite attributes
 }
 
 // Function to store the generated token in Firestore
