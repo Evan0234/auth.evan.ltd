@@ -11,7 +11,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(); // Initialize Firestore
+const db = firebase.firestore();
 
 // ProxyCheck.io API key
 const publicApiKey = 'public-9x6w48-069817-042v72';
@@ -23,8 +23,9 @@ async function getUserIP() {
         const data = await response.json();
         return data.ip;
     } catch (error) {
+        alert('Error fetching IP');
         console.error('Error fetching user IP:', error);
-        throw error;
+        return null;
     }
 }
 
@@ -33,23 +34,13 @@ async function checkProxyStatus(ip) {
     const url = `https://proxycheck.io/v2/${ip}?key=${publicApiKey}&vpn=1&asn=1&risk=1`;
     try {
         const response = await fetch(url);
-        
-        if (!response.ok) {
-            console.error('Error response:', response);
-            throw new Error('Failed to fetch proxy status');
-        }
-        
         const data = await response.json();
         const ipData = data[ip];
-
-        if (!ipData) {
-            throw new Error(`Invalid response structure or IP not found: ${JSON.stringify(data)}`);
-        }
-        
-        return ipData;
+        return ipData || {};
     } catch (error) {
+        alert('Error during VPN check');
         console.error('Error during proxy check:', error);
-        throw error;
+        return {};
     }
 }
 
@@ -63,82 +54,78 @@ function generateRandomToken(length = 50) {
     return result;
 }
 
-// Function to set a cookie with security options
+// Function to set a cookie
 function setCookie(name, value, days) {
     const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Cookie expiration in days
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
     const expires = "expires=" + date.toUTCString();
-    console.log(`Setting cookie: ${name}=${value}; Expires: ${expires}`);
-    document.cookie = `${name}=${value};${expires};path=/;Secure;SameSite=Lax`; // Ensure secure and SameSite attributes
+    document.cookie = `${name}=${value};${expires};path=/;SameSite=Lax;Secure`;
+    console.log(`Cookie set: ${name}=${value}`);
 }
 
-// Function to get a cookie value by name
+// Function to get a cookie by name
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;  // Return null if cookie not found
+    return null;
 }
 
-// Function to store the generated token in Firestore
+// Function to store the token in Firestore
 async function storeTokenInFirestore(token) {
     try {
         await db.collection('verify_tokens').doc(token).set({
             token: token,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        console.log('Token stored in Firestore successfully.');
+        console.log('Token stored in Firestore');
     } catch (error) {
-        console.error('Error storing token in Firestore:', error);
+        alert('Error storing token in Firestore');
+        console.error('Firestore storage error:', error);
     }
 }
 
-// Main function to handle the VPN check and verification flow
+// Main function for verification
 async function handleVerification() {
     try {
-        // Step 0: Check if the cookie is already set to prevent repeated verification
+        // Check for an existing cookie first
         const existingToken = getCookie('verify_cookie');
         if (existingToken) {
-            console.log(`Cookie already set: ${existingToken}. No further action needed.`);
-            return;  // Stop further execution if cookie already exists
+            alert(`Token found in cookie: ${existingToken}. No further verification.`);
+            return;
         }
-
-        console.log("No existing cookie, proceeding with verification...");
-
-        // Step 1: Get the user's IP
+        
+        // If no cookie, proceed with verification
+        alert('No existing cookie, starting verification...');
+        
         const ip = await getUserIP();
-        console.log(`User IP: ${ip}`);
-
-        // Step 2: Check for VPN or proxy
+        if (!ip) {
+            alert('Could not fetch user IP. Verification aborted.');
+            return;
+        }
+        
         const result = await checkProxyStatus(ip);
-        console.log('VPN check result:', result);
-
-        // Step 3: If VPN/proxy is detected, redirect back to auth.evan.ltd
         if (result.proxy === 'yes' || result.vpn === 'yes') {
-            console.log('VPN detected, redirecting to auth.evan.ltd');
-            window.location.href = 'https://auth.evan.ltd';  // Ensure this redirects correctly
+            alert('VPN detected, redirecting...');
+            window.location.href = 'https://auth.evan.ltd';
             return;
         }
 
-        // Step 4: Generate a 50-character random token
+        // Generate and set token
         const token = generateRandomToken();
-        console.log(`Generated token: ${token}`);
+        setCookie('verify_cookie', token, 1);  // Set cookie for 1 day
 
-        // Step 5: Set a cookie with the generated token (expires in 1 day)
-        setCookie('verify_cookie', token, 1);
-        console.log(`Cookie set: verify_cookie=${token}`);
+        // Store token in Firestore
+        await storeTokenInFirestore(token);
 
-        // Step 6: Store the token in Firestore
-        await storeTokenInFirestore(token);  // Awaiting this to make sure storage completes
-
-        // Step 7: Redirect to the main site (evan.ltd) after everything is set
-        console.log('Redirecting to evan.ltd');
+        alert('Verification successful. Redirecting to evan.ltd...');
         window.location.href = 'https://evan.ltd';
 
     } catch (error) {
-        console.error('Error during verification process:', error);
+        alert('An error occurred during the verification process.');
+        console.error('Verification error:', error);
     }
 }
 
-// Trigger the verification flow when the page loads
+// Trigger verification on page load
 window.onload = handleVerification;
