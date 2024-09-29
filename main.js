@@ -1,4 +1,4 @@
-// Firebase Configuration (Replace with your actual Firebase config)
+// Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDOQKCzqkdDMlLdIpoUyd9Nnd-Z21vuZho",
     authDomain: "evanltd1.firebaseapp.com",
@@ -10,8 +10,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore(app); // Pass the app instance to firestore
 
 // ProxyCheck.io API key
 const publicApiKey = 'public-9x6w48-069817-042v72';
