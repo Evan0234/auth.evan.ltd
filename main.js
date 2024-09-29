@@ -37,13 +37,13 @@ async function checkProxyStatus(ip) {
     return ipData;
 }
 
-// Function to show VPN/Proxy warning
-function showVPNWarning() {
-    document.getElementById('vpn-warning').classList.remove('hidden');
-    document.getElementById('content').classList.add('hidden');
+// Function to prevent the page from loading if VPN/Proxy is detected
+function blockPage() {
+    // You can also redirect to a custom page instead of just blocking
+    document.body.innerHTML = '<h1 style="color: red; text-align: center; margin-top: 20%;">Access Denied: Please turn off your VPN/Proxy.</h1>';
 }
 
-// Function to handle VPN/Proxy check
+// Function to handle VPN/Proxy check and block the page if detected
 async function handleVPNCheck() {
     try {
         const ip = await getUserIP();
@@ -55,12 +55,13 @@ async function handleVPNCheck() {
 
         // Ensure result contains expected properties
         if (result.proxy === 'yes' || result.vpn === 'yes') {
-            showVPNWarning();
+            // Block the page if a VPN or proxy is detected
+            blockPage();
         }
     } catch (error) {
         console.error('Error during VPN check:', error);
     }
 }
 
-// Run the VPN check when the page loads
+// Run the VPN check before the page fully loads
 window.onload = handleVPNCheck;
