@@ -1,6 +1,4 @@
-//main.js
-
-// Firebase Configuration 
+// Firebase Configuration (Replace with your actual Firebase config)
 const firebaseConfig = {
   apiKey: "AIzaSyDOQKCzqkdDMlLdIpoUyd9Nnd-Z21vuZho",
   authDomain: "evanltd1.firebaseapp.com",
@@ -72,6 +70,7 @@ async function storeTokenInFirestore(token) {
         console.log('Token stored in Firestore successfully.');
     } catch (error) {
         console.error('Error storing token in Firestore:', error);
+        throw error;  // Throwing error to ensure the flow stops if Firestore storage fails
     }
 }
 
@@ -80,26 +79,31 @@ async function handleVerification() {
     try {
         // Step 1: Get the user's IP
         const ip = await getUserIP();
+        console.log(`User IP: ${ip}`);
 
         // Step 2: Check for VPN or proxy
         const result = await checkProxyStatus(ip);
+        console.log('VPN check result:', result);
 
         // Step 3: If VPN/proxy is detected, redirect back to auth.evan.ltd
         if (result.proxy === 'yes' || result.vpn === 'yes') {
-            window.location.href = '/auth.evan.ltd';
+            console.log('VPN detected, redirecting to auth.evan.ltd');
+            window.location.href = 'https://auth.evan.ltd';  // Make sure this redirects correctly
             return;
         }
 
         // Step 4: Generate a 50-character random token
         const token = generateRandomToken();
+        console.log(`Generated token: ${token}`);
 
         // Step 5: Set a cookie with the generated token (expires in 1 day)
         setCookie('verify_cookie', token, 1);
 
         // Step 6: Store the token in Firestore
-        await storeTokenInFirestore(token);
+        await storeTokenInFirestore(token);  // Awaiting this to make sure storage completes
 
         // Step 7: Redirect to the main site (evan.ltd)
+        console.log('Redirecting to evan.ltd');
         window.location.href = 'https://evan.ltd';
 
     } catch (error) {
