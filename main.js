@@ -71,6 +71,14 @@ function setCookie(name, value, days) {
     document.cookie = `${name}=${value};${expires};path=/;Secure;SameSite=Lax`; // Ensure secure and SameSite attributes
 }
 
+// Function to get a cookie value by name
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;  // Return null if cookie not found
+}
+
 // Function to store the generated token in Firestore
 async function storeTokenInFirestore(token) {
     try {
@@ -87,6 +95,13 @@ async function storeTokenInFirestore(token) {
 // Main function to handle the VPN check and verification flow
 async function handleVerification() {
     try {
+        // Step 0: Check if the cookie is already set to prevent repeated verification
+        const existingToken = getCookie('verify_cookie');
+        if (existingToken) {
+            console.log(`Cookie already set: ${existingToken}. No further action needed.`);
+            return;  // Stop further execution if cookie already exists
+        }
+
         // Step 1: Get the user's IP
         const ip = await getUserIP();
         console.log(`User IP: ${ip}`);
