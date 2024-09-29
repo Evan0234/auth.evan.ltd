@@ -9,7 +9,7 @@ const firebaseConfig = {
     measurementId: "G-P5NMF5Z2N3"
 };
 
-// Initialize Firebase with a try-catch block to catch any initialization errors
+// Initialize Firebase
 try {
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -18,6 +18,9 @@ try {
     console.error("Firebase initialization failed:", error);
     alert('Firebase initialization failed.');
 }
+
+// ProxyCheck.io API key
+const publicApiKey = 'public-9x6w48-069817-042v72';
 
 // Function to get user's IP address
 async function getUserIP() {
@@ -91,44 +94,40 @@ async function storeTokenInFirestore(token) {
 
 // Main function for verification
 async function handleVerification() {
-    try {
-        // Check for an existing cookie first
-        const existingToken = getCookie('verify_cookie');
-        if (existingToken) {
-            alert(`Token found in cookie: ${existingToken}. No further verification.`);
-            return;
-        }
-        
-        // If no cookie, proceed with verification
-        alert('No existing cookie, starting verification...');
-        
-        const ip = await getUserIP();
-        if (!ip) {
-            alert('Could not fetch user IP. Verification aborted.');
-            return;
-        }
-        
-        const result = await checkProxyStatus(ip);
-        if (result.proxy === 'yes' || result.vpn === 'yes') {
-            alert('VPN detected, redirecting...');
-            window.location.href = 'https://auth.evan.ltd';
-            return;
-        }
-
-        // Generate and set token
-        const token = generateRandomToken();
-        setCookie('verify_cookie', token, 1);  // Set cookie for 1 day
-
-        // Store token in Firestore
-        await storeTokenInFirestore(token);
-
-        alert('Verification successful. Redirecting to evan.ltd...');
-        window.location.href = 'https://evan.ltd';
-
-    } catch (error) {
-        alert('An error occurred during the verification process.');
-        console.error('Verification error:', error);
+    // Check for an existing cookie first
+    const existingToken = getCookie('verify_cookie');
+    if (existingToken) {
+        alert(`Token found in cookie: ${existingToken}. Redirecting to evan.ltd/${existingToken}`);
+        window.location.href = `https://evan.ltd/${existingToken}`; // Redirect with token in the URL
+        return;
     }
+    
+    // If no cookie, proceed with verification
+    alert('No existing cookie, starting verification...');
+    
+    const ip = await getUserIP();
+    if (!ip) {
+        alert('Could not fetch user IP. Verification aborted.');
+        return;
+    }
+    
+    const result = await checkProxyStatus(ip);
+    if (result.proxy === 'yes' || result.vpn === 'yes') {
+        alert('VPN detected, redirecting...');
+        window.location.href = 'https://auth.evan.ltd';
+        return;
+    }
+
+    // Generate and set token
+    const token = generateRandomToken();
+    setCookie('verify_cookie', token, 1);  // Set cookie for 1 day
+
+    // Store token in Firestore
+    await storeTokenInFirestore(token);
+
+    // Redirect to evan.ltd with the generated token
+    alert(`Verification successful. Redirecting to evan.ltd/${token}...`);
+    window.location.href = `https://evan.ltd/${token}`;
 }
 
 // Trigger verification on page load
