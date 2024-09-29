@@ -1,9 +1,6 @@
-// main.js
+//main.js
 
-// Your API keys for proxycheck.io
-const publicApiKey = 'public-9x6w48-069817-042v72';
-
-// Firebase configuration
+// Firebase Configuration 
 const firebaseConfig = {
   apiKey: "AIzaSyDOQKCzqkdDMlLdIpoUyd9Nnd-Z21vuZho",
   authDomain: "evanltd1.firebaseapp.com",
@@ -18,6 +15,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ProxyCheck.io API key
+const publicApiKey = 'public-9x6w48-069817-042v72';
+
 // Function to get user's IP address
 async function getUserIP() {
     const response = await fetch('https://api64.ipify.org?format=json');
@@ -31,7 +31,6 @@ async function checkProxyStatus(ip) {
     const response = await fetch(url);
     
     if (!response.ok) {
-        console.error('Response error:', response);
         throw new Error('Failed to fetch proxy status');
     }
     
@@ -39,19 +38,18 @@ async function checkProxyStatus(ip) {
     const ipData = data[ip];
 
     if (!ipData) {
-        throw new Error(`Invalid response structure or IP not found in response: ${JSON.stringify(data)}`);
+        throw new Error(`Invalid response structure or IP not found: ${JSON.stringify(data)}`);
     }
     
     return ipData;
 }
 
-// Function to generate a random token
+// Function to generate a random token (50 characters)
 function generateRandomToken(length = 50) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
-    const charactersLength = characters.length;
     for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return result;
 }
@@ -59,74 +57,55 @@ function generateRandomToken(length = 50) {
 // Function to set a cookie
 function setCookie(name, value, days) {
     const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Cookie expiration in days
     const expires = "expires=" + date.toUTCString();
-    document.cookie = name + "=" + value + ";" + expires + ";path=/";
+    document.cookie = `${name}=${value};${expires};path=/`;
 }
 
-// Function to get a cookie
-function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
-
-// Function to store token in Firebase
-async function storeTokenInFirebase(token) {
+// Function to store the generated token in Firestore
+async function storeTokenInFirestore(token) {
     try {
         await db.collection('verify_tokens').doc(token).set({
             token: token,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        console.log('Token stored in Firestore successfully.');
     } catch (error) {
-        console.error("Error storing token in Firebase: ", error);
+        console.error('Error storing token in Firestore:', error);
     }
 }
 
-// Function to verify the token
-async function verifyToken(token) {
-    const doc = await db.collection('verify_tokens').doc(token).get();
-    return doc.exists;
-}
-
-// Function to handle the authentication and redirection flow
-async function handleAuthCheck() {
+// Main function to handle the VPN check and verification flow
+async function handleVerification() {
     try {
+        // Step 1: Get the user's IP
         const ip = await getUserIP();
+
+        // Step 2: Check for VPN or proxy
         const result = await checkProxyStatus(ip);
 
+        // Step 3: If VPN/proxy is detected, redirect back to auth.evan.ltd
         if (result.proxy === 'yes' || result.vpn === 'yes') {
-            // Redirect back to auth if VPN is detected
             window.location.href = '/auth.evan.ltd';
-        } else {
-            // Check if the user already has a verification cookie
-            const verifyCookie = getCookie('verify_cookie');
-
-            if (verifyCookie) {
-                const isValid = await verifyToken(verifyCookie);
-                if (isValid) {
-                    window.location.href = 'https://evan.ltd'; // Valid token, redirect to main site
-                } else {
-                    // Invalid token, redirect to auth
-                    window.location.href = '/auth.evan.ltd';
-                }
-            } else {
-                // No cookie, generate a new token and set it
-                const token = generateRandomToken();
-                setCookie('verify_cookie', token, 1); // Cookie lasts for 1 day
-                await storeTokenInFirebase(token);
-                window.location.href = 'https://evan.ltd'; // Redirect to main site
-            }
+            return;
         }
+
+        // Step 4: Generate a 50-character random token
+        const token = generateRandomToken();
+
+        // Step 5: Set a cookie with the generated token (expires in 1 day)
+        setCookie('verify_cookie', token, 1);
+
+        // Step 6: Store the token in Firestore
+        await storeTokenInFirestore(token);
+
+        // Step 7: Redirect to the main site (evan.ltd)
+        window.location.href = 'https://evan.ltd';
+
     } catch (error) {
-        console.error('Error during auth check:', error);
+        console.error('Error during verification process:', error);
     }
 }
 
-// Run the auth check when the page loads
-window.onload = handleAuthCheck;
+// Trigger the verification flow when the page loads
+window.onload = handleVerification;
