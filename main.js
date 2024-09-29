@@ -9,12 +9,15 @@ const firebaseConfig = {
     measurementId: "G-P5NMF5Z2N3"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// ProxyCheck.io API key
-const publicApiKey = 'public-9x6w48-069817-042v72';
+// Initialize Firebase with a try-catch block to catch any initialization errors
+try {
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    console.log("Firebase initialized successfully.");
+} catch (error) {
+    console.error("Firebase initialization failed:", error);
+    alert('Firebase initialization failed.');
+}
 
 // Function to get user's IP address
 async function getUserIP() {
@@ -74,6 +77,7 @@ function getCookie(name) {
 // Function to store the token in Firestore
 async function storeTokenInFirestore(token) {
     try {
+        const db = firebase.firestore();
         await db.collection('verify_tokens').doc(token).set({
             token: token,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
