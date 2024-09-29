@@ -18,28 +18,39 @@ const publicApiKey = 'public-9x6w48-069817-042v72';
 
 // Function to get user's IP address
 async function getUserIP() {
-    const response = await fetch('https://api64.ipify.org?format=json');
-    const data = await response.json();
-    return data.ip;
+    try {
+        const response = await fetch('https://api64.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+    } catch (error) {
+        console.error('Error fetching user IP:', error);
+        throw error;  // Rethrow for higher-level handling
+    }
 }
 
 // Function to check VPN/Proxy status using proxycheck.io API
 async function checkProxyStatus(ip) {
     const url = `https://proxycheck.io/v2/${ip}?key=${publicApiKey}&vpn=1&asn=1&risk=1`;
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-        throw new Error('Failed to fetch proxy status');
-    }
-    
-    const data = await response.json();
-    const ipData = data[ip];
+    try {
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            console.error('Error response:', response);
+            throw new Error('Failed to fetch proxy status');
+        }
+        
+        const data = await response.json();
+        const ipData = data[ip];
 
-    if (!ipData) {
-        throw new Error(`Invalid response structure or IP not found: ${JSON.stringify(data)}`);
+        if (!ipData) {
+            throw new Error(`Invalid response structure or IP not found: ${JSON.stringify(data)}`);
+        }
+        
+        return ipData;
+    } catch (error) {
+        console.error('Error during proxy check:', error);
+        throw error;  // Rethrow for higher-level handling
     }
-    
-    return ipData;
 }
 
 // Function to generate a random token (50 characters)
@@ -97,6 +108,7 @@ async function handleVerification() {
 
         // Step 5: Set a cookie with the generated token (expires in 1 day)
         setCookie('verify_cookie', token, 1);
+        console.log(`Cookie set: verify_cookie=${token}`);
 
         // Step 6: Store the token in Firestore
         await storeTokenInFirestore(token);  // Awaiting this to make sure storage completes
