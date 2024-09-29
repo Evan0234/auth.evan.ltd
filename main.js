@@ -10,8 +10,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(app); // Pass the app instance to firestore
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore(); // Initialize Firestore
 
 // ProxyCheck.io API key
 const publicApiKey = 'public-9x6w48-069817-042v72';
