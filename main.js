@@ -11,9 +11,10 @@ async function getUserIP() {
     return data.ip;
 }
 
-// Function to check VPN/Proxy status using proxycheck.io API
+// Function to check VPN/Proxy status using proxycheck.io API with cache-busting
 async function checkProxyStatus(ip) {
-    const url = `https://proxycheck.io/v2/${ip}?key=${publicApiKey}&vpn=1&asn=1&risk=1`;
+    const timestamp = new Date().getTime(); // Unique timestamp to prevent caching
+    const url = `https://proxycheck.io/v2/${ip}?key=${publicApiKey}&vpn=1&asn=1&risk=1&cache-bust=${timestamp}`;
     const response = await fetch(url);
     
     // Ensure the response is successful and in JSON format
