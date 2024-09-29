@@ -47,12 +47,14 @@ async function checkProxyStatus(ip) {
     // Log the entire response to debug
     console.log('ProxyCheck API response:', data);
     
-    // Check if the IP address is part of the response data
-    if (!data[ip]) {
+    // Dynamically access the IP object
+    const ipData = data[ip];
+
+    if (!ipData) {
         throw new Error(`Invalid response structure or IP not found in response: ${JSON.stringify(data)}`);
     }
     
-    return data[ip];
+    return ipData;
 }
 
 // Function to show VPN/Proxy warning
