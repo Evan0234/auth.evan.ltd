@@ -79,13 +79,13 @@ async function validateToken(token) {
 async function handleTokenGeneration() {
     console.log("Starting token generation and verification process...");
 
-    const existingToken = getCookie('verify_token'); // Change here
+    const existingToken = getCookie('verify_token');
     console.log(`Checking for existing token: ${existingToken}`);
 
-    // If the cookie already exists, verify it
+    // If the cookie already exists, just validate it and redirect
     if (existingToken) {
         console.log(`Existing token found: ${existingToken}`);
-        
+
         // Validate the existing token
         const isValid = await validateToken(existingToken);
         if (isValid) {
@@ -101,14 +101,14 @@ async function handleTokenGeneration() {
 
     // If no valid token exists, generate a new one
     const newToken = generateRandomToken();
-    setCookie('verify_token', newToken, 1); // Change here to match the cookie name
+    setCookie('verify_token', newToken, 1); // Set the cookie for 1 day
 
     // Store the new token in Firestore
     await storeTokenInFirestore(newToken);
 
     console.log(`New token generated and stored: ${newToken}`);
-    
-    // After storing, redirect to evan.ltd
+
+    // Redirect to evan.ltd after storing the token
     window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
 }
 
