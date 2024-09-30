@@ -79,7 +79,7 @@ async function validateToken(token) {
 async function handleTokenGeneration() {
     console.log("Starting token generation and verification process...");
 
-    const existingToken = getCookie('verify_cookie');
+    const existingToken = getCookie('verify_token'); // Change here
     console.log(`Checking for existing token: ${existingToken}`);
 
     // If the cookie already exists, verify it
@@ -101,7 +101,7 @@ async function handleTokenGeneration() {
 
     // If no valid token exists, generate a new one
     const newToken = generateRandomToken();
-    setCookie('verify_cookie', newToken, 1); // Set cookie for 1 day
+    setCookie('verify_token', newToken, 1); // Change here to match the cookie name
 
     // Store the new token in Firestore
     await storeTokenInFirestore(newToken);
