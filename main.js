@@ -18,7 +18,7 @@ function setCookie(name, value, days) {
     const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Cookie expiration in days
     const expires = "expires=" + date.toUTCString();
-    const domain = "domain=.evan.ltd"; // Ensure both subdomains share the same cookies
+    const domain = "domain=.evan.ltd"; // Set cookie for all subdomains
     document.cookie = `${name}=${value};${expires};${domain};path=/`;
     console.log(`Cookie set: ${name}=${value}; Expires in ${days} days`);
 }
@@ -71,7 +71,7 @@ async function validateToken(token) {
     }
 }
 
-// Main function to handle the token generation and verification process
+// Main function to handle token generation and verification
 async function handleTokenGeneration() {
     console.log("Starting token generation and verification process...");
 
@@ -99,10 +99,10 @@ async function handleTokenGeneration() {
     const newToken = generateRandomToken();
     console.log(`Generated new token: ${newToken}`);
 
-    // Set cookies for token across subdomains (auth.evan.ltd, evan.ltd)
+    // Set the cookie for the token
     setCookie('verify_token', newToken, 1);
 
-    // Store token in Firestore
+    // Store the token in Firestore
     await storeTokenInFirestore(newToken);
 
     console.log(`New token generated and stored: ${newToken}`);
