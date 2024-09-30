@@ -55,30 +55,52 @@ async function storeTokenInFirestore(token) {
         });
         console.log('Token stored in Firestore');
     } catch (error) {
+        console.error('Error storing token in Firestore:', error);
         alert('Error storing token in Firestore');
-        console.error('Firestore storage error:', error);
     }
 }
 
-// Main function for token generation
+// Function to validate the token in Firestore
+async function validateToken(token) {
+    const db = firebase.firestore();
+    try {
+        const doc = await db.collection('verify_tokens').doc(token).get();
+        return doc.exists;  // Returns true if the token exists in Firestore
+    } catch (error) {
+        console.error("Error checking token in Firestore:", error);
+        return false;  // Return false if there's an error
+    }
+}
+
+// Main function for token generation and verification
 async function handleTokenGeneration() {
     const existingToken = getCookie('verify_cookie');
 
-    // If the cookie already exists, do nothing
+    // If the cookie already exists, verify it
     if (existingToken) {
         console.log(`Existing token found: ${existingToken}`);
-        return; // Exit the function
+        
+        // Validate the existing token
+        const isValid = await validateToken(existingToken);
+        if (isValid) {
+            console.log('Existing token is valid. Redirecting to evan.ltd...');
+            window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
+            return;  // Exit the function
+        } else {
+            console.log('Existing token is invalid. Generating a new token...');
+        }
     }
 
-    // If no cookie, generate a new token
+    // If no valid token exists, generate a new one
     const newToken = generateRandomToken();
     setCookie('verify_cookie', newToken, 1); // Set cookie for 1 day
 
-    // Store the token in Firestore
+    // Store the new token in Firestore
     await storeTokenInFirestore(newToken);
 
     console.log(`New token generated and stored: ${newToken}`);
+    window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
 }
 
-// Trigger token generation on page load
+// Trigger token generation and validation on page load
 window.onload = handleTokenGeneration;
