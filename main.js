@@ -15,7 +15,36 @@ try {
     console.log("Firebase initialized successfully.");
 } catch (error) {
     console.error("Firebase initialization failed:", error);
-    alert('Firebase initialization failed.');
+}
+
+const db = firebase.firestore(); // Initialize Firestore
+
+// Function to handle user authentication (anonymous)
+async function authenticateUser() {
+    try {
+        const userCredential = await firebase.auth().signInAnonymously();
+        console.log("User authenticated successfully:", userCredential.user.uid);
+        return userCredential.user; // Return the authenticated user
+    } catch (error) {
+        console.error("Error during authentication:", error);
+        alert('Authentication failed.');
+    }
+}
+
+// Function to get the value of a cookie
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Function to set a cookie
+function setCookie(name, value, days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Cookie expiration in days
+    const expires = "expires=" + date.toUTCString();
+    document.cookie = `${name}=${value};${expires};path=/`;
 }
 
 // Function to generate a random token (50 characters)
@@ -25,64 +54,54 @@ function generateRandomToken(length = 50) {
     for (let i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
-    console.log(`Generated token: ${result}`);
     return result;
 }
 
-// Function to set a cookie
-function setCookie(name, value, days) {
-    const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-    const expires = "expires=" + date.toUTCString();
-    document.cookie = `${name}=${value};${expires};path=/;SameSite=Lax;Secure`;
-    console.log(`Cookie set: ${name}=${value}`);
-}
-
-// Function to get a cookie by name
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return null;
-}
-
-// Function to store the token in Firestore
+// Function to store the generated token in Firestore
 async function storeTokenInFirestore(token) {
-    const db = firebase.firestore();
     try {
         await db.collection('verify_tokens').doc(token).set({
             token: token,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        console.log(`Token stored in Firestore: ${token}`);
+        console.log('Token stored in Firestore successfully.');
     } catch (error) {
         console.error('Error storing token in Firestore:', error);
-        alert('Error storing token in Firestore');
+        throw error;  // Rethrow for higher-level handling
     }
 }
 
-// Function to validate the token in Firestore
+// Function to validate token in Firestore
 async function validateToken(token) {
-    const db = firebase.firestore();
     try {
-        const doc = await db.collection('verify_tokens').doc(token).get();
-        const exists = doc.exists;
-        console.log(`Token validation for ${token}: ${exists}`);
-        return exists;  // Returns true if the token exists in Firestore
+        const tokenDoc = await db.collection('verify_tokens').doc(token).get();
+        if (tokenDoc.exists) {
+            console.log(`Token ${token} is valid.`);
+            return true;  // Token is valid
+        } else {
+            console.log(`Token ${token} is invalid.`);
+            return false; // Token is invalid
+        }
     } catch (error) {
-        console.error("Error checking token in Firestore:", error);
-        return false;  // Return false if there's an error
+        console.error('Error checking token in Firestore:', error);
+        return false; // In case of error, treat as invalid
     }
 }
 
-// Main function for token generation and verification
+// Main function to handle the token generation and verification process
 async function handleTokenGeneration() {
     console.log("Starting token generation and verification process...");
+
+    // Authenticate the user first
+    const user = await authenticateUser();
+    if (!user) {
+        console.error("User authentication failed, aborting.");
+        return; // Abort if authentication fails
+    }
 
     const existingToken = getCookie('verify_token');
     console.log(`Checking for existing token: ${existingToken}`);
 
-    // If the cookie already exists, just validate it and redirect
     if (existingToken) {
         console.log(`Existing token found: ${existingToken}`);
 
@@ -99,11 +118,9 @@ async function handleTokenGeneration() {
         console.log('No existing token found. Generating a new token...');
     }
 
-    // If no valid token exists, generate a new one
     const newToken = generateRandomToken();
-    setCookie('verify_token', newToken, 1); // Set the cookie for 1 day
+    setCookie('verify_token', newToken, 1);
 
-    // Store the new token in Firestore
     await storeTokenInFirestore(newToken);
 
     console.log(`New token generated and stored: ${newToken}`);
@@ -112,5 +129,5 @@ async function handleTokenGeneration() {
     window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
 }
 
-// Trigger token generation and validation on page load
+// Trigger the token generation flow when the page loads
 window.onload = handleTokenGeneration;
