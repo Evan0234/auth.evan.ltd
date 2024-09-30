@@ -28,6 +28,7 @@ async function authenticateUser() {
     } catch (error) {
         console.error("Error during authentication:", error);
         alert('Authentication failed.');
+        throw error;
     }
 }
 
@@ -45,6 +46,7 @@ function setCookie(name, value, days) {
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Cookie expiration in days
     const expires = "expires=" + date.toUTCString();
     document.cookie = `${name}=${value};${expires};path=/`;
+    console.log(`Cookie set: ${name}=${value}; Expires in ${days} days`);
 }
 
 // Function to generate a random token (50 characters)
@@ -67,7 +69,7 @@ async function storeTokenInFirestore(token) {
         console.log('Token stored in Firestore successfully.');
     } catch (error) {
         console.error('Error storing token in Firestore:', error);
-        throw error;  // Rethrow for higher-level handling
+        throw error;
     }
 }
 
@@ -118,9 +120,14 @@ async function handleTokenGeneration() {
         console.log('No existing token found. Generating a new token...');
     }
 
+    // Generate new token
     const newToken = generateRandomToken();
+    console.log(`Generated new token: ${newToken}`);
+
+    // Set cookie for 1 day
     setCookie('verify_token', newToken, 1);
 
+    // Store token in Firestore
     await storeTokenInFirestore(newToken);
 
     console.log(`New token generated and stored: ${newToken}`);
