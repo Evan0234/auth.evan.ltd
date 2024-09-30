@@ -13,6 +13,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore(); // Initialize Firestore
 
+// Initialize Firebase Authentication
+const auth = firebase.auth();
+
 // Function to set a cookie with cross-domain support
 function setCookie(name, value, days) {
     const date = new Date();
@@ -75,40 +78,50 @@ async function validateToken(token) {
 async function handleTokenGeneration() {
     console.log("Starting token generation and verification process...");
 
-    // Check for existing token
-    const existingToken = getCookie('verify_token');
-    console.log(`Checking for existing token: ${existingToken}`);
+    // Ensure the user is signed in
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            console.log("User is authenticated:", user.uid);
 
-    if (existingToken) {
-        console.log(`Existing token found: ${existingToken}`);
+            // Check for existing token
+            const existingToken = getCookie('verify_token');
+            console.log(`Checking for existing token: ${existingToken}`);
 
-        // Validate the existing token
-        const isValid = await validateToken(existingToken);
-        if (isValid) {
-            console.log('Existing token is valid. Redirecting to evan.ltd...');
+            if (existingToken) {
+                console.log(`Existing token found: ${existingToken}`);
+
+                // Validate the existing token
+                const isValid = await validateToken(existingToken);
+                if (isValid) {
+                    console.log('Existing token is valid. Redirecting to evan.ltd...');
+                    window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
+                    return;  // Exit the function
+                } else {
+                    console.log('Existing token is invalid. Generating a new token...');
+                }
+            } else {
+                console.log('No existing token found. Generating a new token...');
+            }
+
+            // Generate new token
+            const newToken = generateRandomToken();
+            console.log(`Generated new token: ${newToken}`);
+
+            // Set the cookie for the token
+            setCookie('verify_token', newToken, 1);
+
+            // Store the token in Firestore
+            await storeTokenInFirestore(newToken);
+
+            console.log(`New token generated and stored: ${newToken}`);
+
+            // Redirect to evan.ltd after storing the token
             window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
-            return;  // Exit the function
         } else {
-            console.log('Existing token is invalid. Generating a new token...');
+            console.log("User is not authenticated. Redirecting to sign-in page...");
+            // Here you can redirect to a sign-in page or show a sign-in prompt
         }
-    } else {
-        console.log('No existing token found. Generating a new token...');
-    }
-
-    // Generate new token
-    const newToken = generateRandomToken();
-    console.log(`Generated new token: ${newToken}`);
-
-    // Set the cookie for the token
-    setCookie('verify_token', newToken, 1);
-
-    // Store the token in Firestore
-    await storeTokenInFirestore(newToken);
-
-    console.log(`New token generated and stored: ${newToken}`);
-
-    // Redirect to evan.ltd after storing the token
-    window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
+    });
 }
 
 // Trigger the token generation process when the page loads
