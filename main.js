@@ -25,6 +25,7 @@ function generateRandomToken(length = 50) {
     for (let i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
+    console.log(`Generated token: ${result}`);
     return result;
 }
 
@@ -53,7 +54,7 @@ async function storeTokenInFirestore(token) {
             token: token,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        console.log('Token stored in Firestore');
+        console.log(`Token stored in Firestore: ${token}`);
     } catch (error) {
         console.error('Error storing token in Firestore:', error);
         alert('Error storing token in Firestore');
@@ -65,7 +66,9 @@ async function validateToken(token) {
     const db = firebase.firestore();
     try {
         const doc = await db.collection('verify_tokens').doc(token).get();
-        return doc.exists;  // Returns true if the token exists in Firestore
+        const exists = doc.exists;
+        console.log(`Token validation for ${token}: ${exists}`);
+        return exists;  // Returns true if the token exists in Firestore
     } catch (error) {
         console.error("Error checking token in Firestore:", error);
         return false;  // Return false if there's an error
@@ -74,7 +77,10 @@ async function validateToken(token) {
 
 // Main function for token generation and verification
 async function handleTokenGeneration() {
+    console.log("Starting token generation and verification process...");
+
     const existingToken = getCookie('verify_cookie');
+    console.log(`Checking for existing token: ${existingToken}`);
 
     // If the cookie already exists, verify it
     if (existingToken) {
@@ -89,6 +95,8 @@ async function handleTokenGeneration() {
         } else {
             console.log('Existing token is invalid. Generating a new token...');
         }
+    } else {
+        console.log('No existing token found. Generating a new token...');
     }
 
     // If no valid token exists, generate a new one
