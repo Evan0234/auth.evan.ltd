@@ -47,8 +47,8 @@ function getCookie(name) {
 
 // Function to store the token in Firestore
 async function storeTokenInFirestore(token) {
+    const db = firebase.firestore();
     try {
-        const db = firebase.firestore();
         await db.collection('verify_tokens').doc(token).set({
             token: token,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -60,30 +60,25 @@ async function storeTokenInFirestore(token) {
     }
 }
 
-// Main function for verification
-async function handleVerification() {
-    // Check for an existing cookie first
+// Main function for token generation
+async function handleTokenGeneration() {
     const existingToken = getCookie('verify_cookie');
+
+    // If the cookie already exists, do nothing
     if (existingToken) {
-        alert(`Token found in cookie: ${existingToken}. Redirecting to evan.ltd/${existingToken}`);
-        window.location.href = `https://evan.ltd/${existingToken}`; // Redirect with token in the URL
-        return;
+        console.log(`Existing token found: ${existingToken}`);
+        return; // Exit the function
     }
-    
-    // If no cookie, proceed with token generation
-    alert('No existing cookie, generating token...');
 
-    // Generate and set token
-    const token = generateRandomToken();
-    setCookie('verify_cookie', token, 1);  // Set cookie for 1 day
+    // If no cookie, generate a new token
+    const newToken = generateRandomToken();
+    setCookie('verify_cookie', newToken, 1); // Set cookie for 1 day
 
-    // Store token in Firestore
-    await storeTokenInFirestore(token);
+    // Store the token in Firestore
+    await storeTokenInFirestore(newToken);
 
-    // Redirect to evan.ltd with the generated token
-    alert(`Token generated successfully. Redirecting to evan.ltd/${token}...`);
-    window.location.href = `https://evan.ltd/${token}`;
+    console.log(`New token generated and stored: ${newToken}`);
 }
 
-// Trigger verification on page load
-window.onload = handleVerification;
+// Trigger token generation on page load
+window.onload = handleTokenGeneration;
