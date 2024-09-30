@@ -107,6 +107,8 @@ async function handleTokenGeneration() {
     await storeTokenInFirestore(newToken);
 
     console.log(`New token generated and stored: ${newToken}`);
+    
+    // After storing, redirect to evan.ltd
     window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
 }
 
