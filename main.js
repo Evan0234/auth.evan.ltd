@@ -12,42 +12,10 @@ const firebaseConfig = {
 // Initialize Firebase
 try {
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
     console.log("Firebase initialized successfully.");
 } catch (error) {
     console.error("Firebase initialization failed:", error);
     alert('Firebase initialization failed.');
-}
-
-// ProxyCheck.io API key
-const publicApiKey = 'public-9x6w48-069817-042v72';
-
-// Function to get user's IP address
-async function getUserIP() {
-    try {
-        const response = await fetch('https://api64.ipify.org?format=json');
-        const data = await response.json();
-        return data.ip;
-    } catch (error) {
-        alert('Error fetching IP');
-        console.error('Error fetching user IP:', error);
-        return null;
-    }
-}
-
-// Function to check VPN/Proxy status using proxycheck.io API
-async function checkProxyStatus(ip) {
-    const url = `https://proxycheck.io/v2/${ip}?key=${publicApiKey}&vpn=1&asn=1&risk=1`;
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        const ipData = data[ip];
-        return ipData || {};
-    } catch (error) {
-        alert('Error during VPN check');
-        console.error('Error during proxy check:', error);
-        return {};
-    }
 }
 
 // Function to generate a random token (50 characters)
@@ -102,21 +70,8 @@ async function handleVerification() {
         return;
     }
     
-    // If no cookie, proceed with verification
-    alert('No existing cookie, starting verification...');
-    
-    const ip = await getUserIP();
-    if (!ip) {
-        alert('Could not fetch user IP. Verification aborted.');
-        return;
-    }
-    
-    const result = await checkProxyStatus(ip);
-    if (result.proxy === 'yes' || result.vpn === 'yes') {
-        alert('VPN detected, redirecting...');
-        window.location.href = 'https://auth.evan.ltd';
-        return;
-    }
+    // If no cookie, proceed with token generation
+    alert('No existing cookie, generating token...');
 
     // Generate and set token
     const token = generateRandomToken();
@@ -126,7 +81,7 @@ async function handleVerification() {
     await storeTokenInFirestore(token);
 
     // Redirect to evan.ltd with the generated token
-    alert(`Verification successful. Redirecting to evan.ltd/${token}...`);
+    alert(`Token generated successfully. Redirecting to evan.ltd/${token}...`);
     window.location.href = `https://evan.ltd/${token}`;
 }
 
