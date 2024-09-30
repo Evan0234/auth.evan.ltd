@@ -10,43 +10,25 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-try {
-    firebase.initializeApp(firebaseConfig);
-    console.log("Firebase initialized successfully.");
-} catch (error) {
-    console.error("Firebase initialization failed:", error);
-}
-
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore(); // Initialize Firestore
 
-// Function to handle user authentication (anonymous)
-async function authenticateUser() {
-    try {
-        const userCredential = await firebase.auth().signInAnonymously();
-        console.log("User authenticated successfully:", userCredential.user.uid);
-        return userCredential.user; // Return the authenticated user
-    } catch (error) {
-        console.error("Error during authentication:", error);
-        alert('Authentication failed.');
-        throw error;
-    }
+// Function to set a cookie with cross-domain support
+function setCookie(name, value, days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Cookie expiration in days
+    const expires = "expires=" + date.toUTCString();
+    const domain = "domain=.evan.ltd"; // Ensure both subdomains share the same cookies
+    document.cookie = `${name}=${value};${expires};${domain};path=/`;
+    console.log(`Cookie set: ${name}=${value}; Expires in ${days} days`);
 }
 
-// Function to get the value of a cookie
+// Function to get the value of a cookie by name
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
     return null;
-}
-
-// Function to set a cookie
-function setCookie(name, value, days) {
-    const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Cookie expiration in days
-    const expires = "expires=" + date.toUTCString();
-    document.cookie = `${name}=${value};${expires};path=/`;
-    console.log(`Cookie set: ${name}=${value}; Expires in ${days} days`);
 }
 
 // Function to generate a random token (50 characters)
@@ -69,24 +51,23 @@ async function storeTokenInFirestore(token) {
         console.log('Token stored in Firestore successfully.');
     } catch (error) {
         console.error('Error storing token in Firestore:', error);
-        throw error;
     }
 }
 
-// Function to validate token in Firestore
+// Function to check if a token exists in Firestore
 async function validateToken(token) {
     try {
-        const tokenDoc = await db.collection('verify_tokens').doc(token).get();
-        if (tokenDoc.exists) {
-            console.log(`Token ${token} is valid.`);
-            return true;  // Token is valid
+        const doc = await db.collection('verify_tokens').doc(token).get();
+        if (doc.exists) {
+            console.log('Token is valid in Firestore.');
+            return true;
         } else {
-            console.log(`Token ${token} is invalid.`);
-            return false; // Token is invalid
+            console.log('Token not found in Firestore.');
+            return false;
         }
     } catch (error) {
         console.error('Error checking token in Firestore:', error);
-        return false; // In case of error, treat as invalid
+        return false;
     }
 }
 
@@ -94,13 +75,7 @@ async function validateToken(token) {
 async function handleTokenGeneration() {
     console.log("Starting token generation and verification process...");
 
-    // Authenticate the user first
-    const user = await authenticateUser();
-    if (!user) {
-        console.error("User authentication failed, aborting.");
-        return; // Abort if authentication fails
-    }
-
+    // Check for existing token
     const existingToken = getCookie('verify_token');
     console.log(`Checking for existing token: ${existingToken}`);
 
@@ -124,7 +99,7 @@ async function handleTokenGeneration() {
     const newToken = generateRandomToken();
     console.log(`Generated new token: ${newToken}`);
 
-    // Set cookie for 1 day
+    // Set cookies for token across subdomains (auth.evan.ltd, evan.ltd)
     setCookie('verify_token', newToken, 1);
 
     // Store token in Firestore
@@ -136,5 +111,5 @@ async function handleTokenGeneration() {
     window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
 }
 
-// Trigger the token generation flow when the page loads
+// Trigger the token generation process when the page loads
 window.onload = handleTokenGeneration;
