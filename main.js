@@ -93,7 +93,9 @@ async function handleTokenGeneration() {
                 // Validate the existing token
                 const isValid = await validateToken(existingToken);
                 if (isValid) {
-                    console.log('Existing token is valid. Redirecting to evan.ltd...');
+                    console.log('Existing token is valid. Keeping the token and redirecting to evan.ltd...');
+                    // Keep the existing token in Firestore
+                    await storeTokenInFirestore(existingToken);
                     window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
                     return;  // Exit the function
                 } else {
@@ -110,7 +112,7 @@ async function handleTokenGeneration() {
             // Set the cookie for the token
             setCookie('verify_token', newToken, 1);
 
-            // Store the token in Firestore
+            // Store the new token in Firestore
             await storeTokenInFirestore(newToken);
 
             console.log(`New token generated and stored: ${newToken}`);
