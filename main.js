@@ -10,9 +10,11 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
+console.log("Initializing Firebase...");
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore(); // Initialize Firestore
 const auth = firebase.auth(); // Initialize Firebase Authentication
+console.log("Firebase initialized successfully.");
 
 // Function to set a cookie
 function setCookie(name, value, days) {
@@ -29,6 +31,7 @@ function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
+    console.log(`No cookie found with name: ${name}`);
     return null;
 }
 
@@ -39,11 +42,13 @@ function generateRandomToken(length = 50) {
     for (let i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
+    console.log(`Generated random token: ${result}`);
     return result;
 }
 
 // Function to store the generated token in Firestore
 async function storeTokenInFirestore(token) {
+    console.log(`Attempting to store token in Firestore: ${token}`);
     try {
         await db.collection('verify_tokens').doc(token).set({
             token: token,
@@ -57,6 +62,7 @@ async function storeTokenInFirestore(token) {
 
 // Function to check if a token exists in Firestore
 async function validateToken(token) {
+    console.log(`Validating token in Firestore: ${token}`);
     try {
         const doc = await db.collection('verify_tokens').doc(token).get();
         if (doc.exists) {
@@ -74,6 +80,7 @@ async function validateToken(token) {
 
 // Function to test Firestore connection
 async function testFirestoreConnection() {
+    console.log("Testing Firestore connection...");
     try {
         await db.collection('verify_tokens').doc('testToken').set({
             test: 'This is a test'
@@ -138,6 +145,7 @@ async function handleTokenGeneration() {
 
 // Trigger the Firestore test and token generation process when the page loads
 window.onload = async () => {
+    console.log("Window loaded. Testing Firestore connection...");
     await testFirestoreConnection(); // Test Firestore connection
     handleTokenGeneration(); // Proceed with token generation
 };
