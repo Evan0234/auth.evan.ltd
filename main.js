@@ -76,7 +76,7 @@ async function validateToken(token) {
 async function handleTokenGeneration() {
     console.log("Starting token generation and verification process...");
 
-    // Ensure the user is signed in
+    // Check if user is signed in
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             console.log("User is authenticated:", user.uid);
