@@ -78,74 +78,50 @@ async function validateToken(token) {
     }
 }
 
-// Function to test Firestore connection
-async function testFirestoreConnection() {
-    console.log("Testing Firestore connection...");
-    try {
-        await db.collection('verify_tokens').doc('testToken').set({
-            test: 'This is a test'
-        });
-        console.log('Firestore connection is working. Test document created successfully.');
-    } catch (error) {
-        console.error('Error testing Firestore connection:', error);
-    }
-}
-
 // Main function to handle token generation and verification
 async function handleTokenGeneration() {
     console.log("Starting token generation and verification process...");
 
-    // Check if user is signed in
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            console.log("User is authenticated:", user.uid);
+    // Check for existing token
+    const existingToken = getCookie('verify_token');
+    console.log(`Checking for existing token: ${existingToken}`);
 
-            // Check for existing token
-            const existingToken = getCookie('verify_token');
-            console.log(`Checking for existing token: ${existingToken}`);
+    if (existingToken) {
+        console.log(`Existing token found: ${existingToken}`);
 
-            if (existingToken) {
-                console.log(`Existing token found: ${existingToken}`);
-
-                // Validate the existing token
-                const isValid = await validateToken(existingToken);
-                if (isValid) {
-                    console.log('Existing token is valid. Redirecting to evan.ltd...');
-                    // Keep the existing token in Firestore
-                    await storeTokenInFirestore(existingToken);
-                    window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
-                    return;  // Exit the function
-                } else {
-                    console.log('Existing token is invalid. Generating a new token...');
-                }
-            } else {
-                console.log('No existing token found. Generating a new token...');
-            }
-
-            // Generate new token
-            const newToken = generateRandomToken();
-            console.log(`Generated new token: ${newToken}`);
-
-            // Set the cookie for the token
-            setCookie('verify_token', newToken, 1);
-
-            // Store the new token in Firestore
-            await storeTokenInFirestore(newToken);
-
-            console.log(`New token generated and stored: ${newToken}`);
-
-            // Redirect to evan.ltd after storing the token
+        // Validate the existing token
+        const isValid = await validateToken(existingToken);
+        if (isValid) {
+            console.log('Existing token is valid. Redirecting to evan.ltd...');
+            // Keep the existing token in Firestore
+            await storeTokenInFirestore(existingToken);
             window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
+            return;  // Exit the function
         } else {
-            console.log("User is not authenticated. Redirecting to sign-in page...");
-            // Here you can redirect to a sign-in page or show a sign-in prompt
+            console.log('Existing token is invalid. Generating a new token...');
         }
-    });
+    } else {
+        console.log('No existing token found. Generating a new token...');
+    }
+
+    // Generate new token
+    const newToken = generateRandomToken();
+    console.log(`Generated new token: ${newToken}`);
+
+    // Set the cookie for the token
+    setCookie('verify_token', newToken, 1);
+
+    // Store the new token in Firestore
+    await storeTokenInFirestore(newToken);
+
+    console.log(`New token generated and stored: ${newToken}`);
+
+    // Redirect to evan.ltd after storing the token
+    window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
 }
 
-// Trigger the Firestore test and token generation process when the page loads
-window.onload = async () => {
-    console.log("Window loaded. Testing Firestore connection...");
-    await testFirestoreConnection(); // Test Firestore connection
+// Trigger the token generation process when the page loads
+window.onload = () => {
+    console.log("Window loaded. Starting token generation process...");
     handleTokenGeneration(); // Proceed with token generation
 };
