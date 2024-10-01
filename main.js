@@ -14,7 +14,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore(); // Initialize Firestore
 const auth = firebase.auth(); // Initialize Firebase Authentication
 
-// Function to set a cookie with cross-domain support
+// Function to set a cookie
 function setCookie(name, value, days) {
     const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000)); // Cookie expiration in days
@@ -72,6 +72,18 @@ async function validateToken(token) {
     }
 }
 
+// Function to test Firestore connection
+async function testFirestoreConnection() {
+    try {
+        await db.collection('verify_tokens').doc('testToken').set({
+            test: 'This is a test'
+        });
+        console.log('Firestore connection is working. Test document created successfully.');
+    } catch (error) {
+        console.error('Error testing Firestore connection:', error);
+    }
+}
+
 // Main function to handle token generation and verification
 async function handleTokenGeneration() {
     console.log("Starting token generation and verification process...");
@@ -91,7 +103,7 @@ async function handleTokenGeneration() {
                 // Validate the existing token
                 const isValid = await validateToken(existingToken);
                 if (isValid) {
-                    console.log('Existing token is valid. Keeping the token and redirecting to evan.ltd...');
+                    console.log('Existing token is valid. Redirecting to evan.ltd...');
                     // Keep the existing token in Firestore
                     await storeTokenInFirestore(existingToken);
                     window.location.href = 'https://evan.ltd';  // Redirect to evan.ltd
@@ -124,5 +136,8 @@ async function handleTokenGeneration() {
     });
 }
 
-// Trigger the token generation process when the page loads
-window.onload = handleTokenGeneration;
+// Trigger the Firestore test and token generation process when the page loads
+window.onload = async () => {
+    await testFirestoreConnection(); // Test Firestore connection
+    handleTokenGeneration(); // Proceed with token generation
+};
