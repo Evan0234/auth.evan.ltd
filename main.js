@@ -13,7 +13,6 @@ const firebaseConfig = {
 console.log("Initializing Firebase...");
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore(); // Initialize Firestore
-const auth = firebase.auth(); // Initialize Firebase Authentication
 console.log("Firebase initialized successfully.");
 
 // Function to set a cookie
