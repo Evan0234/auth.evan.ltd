@@ -12,9 +12,7 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore(); // Initialize Firestore
-
-// Initialize Firebase Authentication
-const auth = firebase.auth();
+const auth = firebase.auth(); // Initialize Firebase Authentication
 
 // Function to set a cookie with cross-domain support
 function setCookie(name, value, days) {
